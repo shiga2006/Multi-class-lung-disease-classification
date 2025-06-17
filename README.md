@@ -58,7 +58,7 @@ Training
 - Epochs: 20 (default)
 - Best model checkpoint is saved automatically.
 
-![Uploading image.png…]()
+![image](https://github.com/user-attachments/assets/20126b84-cc3e-42a7-a457-0d335b2667dc)
 
 Usage
 
@@ -93,9 +93,12 @@ python main.py
 ![image](https://github.com/user-attachments/assets/b3028cb3-f7ae-4e26-81cb-b9c9bd6eb7b3)
 
 
+
 Results
 Overall accuracy - 81.6%
+
 ![image](https://github.com/user-attachments/assets/a2a684c8-9152-48e3-b63d-3b9f6ef8d7c8)
+
 ![image](https://github.com/user-attachments/assets/5dc6b90b-415b-4a33-b101-ab87612782b4)
 
 
