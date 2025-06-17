@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X-ray Analysis Chatbot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #ffffff;
+            height: 100vh;
+            display: flex;
+            color: #333;
+        }
+
+        .chat-container {
+            width: 100%;
+            height: 100vh;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #e5e7eb;
+        }
+
+        .chat-header {
+            background: #f8fafc;
+            color: #1f2937;
+            padding: 16px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            position: relative;
+        }
+
+        .chat-header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+            color: #111827;
+        }
+
+        .chat-header p {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .status-indicator {
+            position: absolute;
+            top: 20px;
+            right: 24px;
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            background: #ffffff;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 24px;
+            animation: fadeInUp 0.2s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.bot {
+            justify-content: flex-start;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+
+        .message.bot .message-content {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+        }
+
+        .message.user .message-content {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            margin: 0 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .bot .avatar {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .user .avatar {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .chat-input {
+            padding: 20px 24px;
+            background: #ffffff;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            resize: none;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            font-family: inherit;
+            max-height: 120px;
+            background: #ffffff;
+        }
+
+        .message-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .file-upload-btn, .send-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            background: #ffffff;
+        }
+
+        .file-upload-btn {
+            color: #6b7280;
+        }
+
+        .file-upload-btn:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+        }
+
+        .send-btn {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 12px 16px;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            max-width: fit-content;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: #9ca3af;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 20% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+            80%, 100% { transform: translateY(0); }
+        }
+
+        .image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 6px;
+            margin-top: 8px;
+            cursor: pointer;
+            border: 1px solid #e5e7eb;
+        }
+
+        .result-section {
+            margin-top: 12px;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 6px;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 6px;
+            font-size: 0.875rem;
+        }
+
+        .disclaimer {
+            margin-top: 12px;
+            padding: 10px;
+            background: #fef3c7;
+            border-radius: 6px;
+            font-size: 0.8125rem;
+            color: #92400e;
+            border-left: 3px solid #f59e0b;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .quick-action {
+            padding: 6px 12px;
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8125rem;
+            transition: all 0.2s;
+            color: #374151;
+        }
+
+        .quick-action:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+        }
+
+        /* Scrollbar styling for webkit browsers */
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        @media (max-width: 768px) {
+            .chat-messages {
+                padding: 16px;
+            }
+            
+            .message-content {
+                max-width: 85%;
+            }
+            
+            .avatar {
+                width: 28px;
+                height: 28px;
+                margin: 0 8px;
+                font-size: 0.75rem;
+            }
+
+            .chat-input {
+                padding: 16px;
+            }
+
+            .file-upload-btn, .send-btn {
+                width: 36px;
+                height: 36px;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="status-indicator"></div>
+            <h1>🩺Lung Disease Classifier</h1>
+            <p>Using Chest X-Ray</p>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">
+                <div class="avatar">🤖</div>
+                <div class="message-content">
+                    <div>Hello! I'm your AI medical assistant specialized in chest X-ray analysis. I can help you:</div>
+                    <div class="quick-actions">
+                        <div class="quick-action" onclick="addQuickMessage('Upload X-ray image for analysis')">📤 Upload X-ray</div>
+                        <div class="quick-action" onclick="addQuickMessage('What conditions can you detect?')">🔍 Detectable conditions</div>
+                        <div class="quick-action" onclick="addQuickMessage('How accurate are your predictions?')">📊 Accuracy info</div>
+                    </div>
+                    <div class="disclaimer">
+                        <strong>Medical Disclaimer:</strong> This AI assistant is for educational purposes only. Always consult healthcare professionals for medical advice.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input">
+            <div class="input-container">
+                <button class="file-upload-btn" onclick="document.getElementById('fileInput').click()" title="Upload X-ray image">
+                    📎
+                </button>
+                <input type="file" id="fileInput" class="file-input" accept="image/*,.dcm" onchange="handleFileUpload(event)">
+                <textarea 
+                    id="messageInput" 
+                    class="message-input" 
+                    placeholder="Ask about X-ray analysis or upload an image..."
+                    rows="1"
+                    onkeypress="handleKeyPress(event)"
+                    oninput="autoResize(this)"
+                ></textarea>
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Send message">
+                    ➤
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFile = null;
+        let isProcessing = false;
+
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // --- MARKDOWN-AWARE MESSAGE RENDERING ---
+        function addMessage(content, isUser = false, isHtml = false, isMarkdown = true) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.textContent = isUser ? '👤' : '🤖';
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+
+            if (isHtml) {
+                messageContent.innerHTML = content;
+            } else if (isMarkdown && !isUser) {
+                // Only bot messages are markdown-rendered for clarity
+                messageContent.innerHTML = marked.parse(content);
+            } else {
+                messageContent.textContent = content;
+            }
+            
+            if (isUser) {
+                messageDiv.appendChild(messageContent);
+                messageDiv.appendChild(avatar);
+            } else {
+                messageDiv.appendChild(avatar);
+                messageDiv.appendChild(messageContent);
+            }
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function addTypingIndicator() {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            messageDiv.id = 'typingIndicator';
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.textContent = '🤖';
+            
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing-indicator';
+            typingDiv.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(typingDiv);
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        function addQuickMessage(message) {
+            document.getElementById('messageInput').value = message;
+            sendMessage();
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                currentFile = file;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imageContent = `
+                        <div>I've uploaded an X-ray image for analysis:</div>
+                        <img src="${e.target.result}" alt="X-ray image" class="image-preview" onclick="openImageModal(this.src)">
+                        <div style="margin-top: 8px; font-size: 0.9rem; opacity: 0.8;">${file.name}</div>
+                    `;
+                    addMessage(imageContent, true, true, false);
+                    
+                    // Automatically start analysis
+                    setTimeout(() => {
+                        analyzeImage();
+                    }, 500);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function analyzeImage() {
+            if (!currentFile) return;
+            
+            isProcessing = true;
+            document.getElementById('sendBtn').disabled = true;
+            
+            addTypingIndicator();
+            
+            const formData = new FormData();
+            formData.append('file', currentFile);
+            
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                removeTypingIndicator();
+                
+                if (data.prediction_markdown || data.prediction) {
+                    let responseContent = '<div class="result-section">';
+                    responseContent += '<div class="result-title">🔬 Analysis Results</div>';
+                    
+                    if (data.prediction_markdown) {
+                        responseContent += marked.parse(data.prediction_markdown);
+                    } else {
+                        responseContent += `<strong>${data.prediction}</strong>`;
+                    }
+                    responseContent += '</div>';
+                    
+                    if (data.explanation_markdown || data.explanation) {
+                        responseContent += '<div class="result-section" style="margin-top: 10px;">';
+                        responseContent += '<div class="result-title">📋 Medical Guidance</div>';
+                        
+                        if (data.explanation_markdown) {
+                            responseContent += marked.parse(data.explanation_markdown);
+                        } else {
+                            responseContent += data.explanation;
+                        }
+                        responseContent += '</div>';
+                    }
+                    
+                    responseContent += `
+                        <div class="disclaimer">
+                            <strong>Important:</strong> This analysis is for educational purposes. Please consult a healthcare professional for medical advice.
+                        </div>
+                        <div class="quick-actions">
+                            <div class="quick-action" onclick="addQuickMessage('Can you explain this result in simpler terms?')">💭 Explain simply</div>
+                            <div class="quick-action" onclick="addQuickMessage('What should I do next?')">📋 Next steps</div>
+                            <div class="quick-action" onclick="addQuickMessage('Upload another X-ray')">📤 New analysis</div>
+                        </div>
+                    `;
+                    
+                    addMessage(responseContent, false, true, false);
+                } else {
+                    addMessage(`❌ Analysis failed: ${data.error || 'Unknown error occurred'}`, false);
+                }
+            } catch (error) {
+                removeTypingIndicator();
+                addMessage('❌ Network error: Unable to connect to the analysis server. Please check your connection and try again.', false);
+            } finally {
+                isProcessing = false;
+                document.getElementById('sendBtn').disabled = false;
+                currentFile = null;
+            }
+        }
+
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+            
+            if (!message && !currentFile) return;
+            if (isProcessing) return;
+            
+            if (message) {
+                addMessage(message, true, false, false);
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
+                
+                // Simulate bot responses for text messages
+                setTimeout(() => {
+                    addTypingIndicator();
+                    setTimeout(() => {
+                        removeTypingIndicator();
+                        handleTextQuery(message);
+                    }, 1500);
+                }, 300);
+            }
+        }
+
+        // Replace the handleTextQuery function with this enhanced version
+function handleTextQuery(query) {
+    const lowerQuery = query.toLowerCase();
+
+    if (lowerQuery.includes('condition') || lowerQuery.includes('detect')) {
+        addMessage(
+`🔍 **I can help analyze chest X-rays for various conditions including:**
+
+- **Pneumonia** – Infection causing lung inflammation  
+- **COVID-19** – Viral respiratory infection patterns  
+- **Tuberculosis** – Bacterial lung infection  
+- **Normal** – Healthy lung appearance  
+- **Other abnormalities** – Various chest conditions
+
+To get started, simply upload a chest X-ray image using the 📎 button below!`
+        );
+    } else if (lowerQuery.includes('accuracy') || lowerQuery.includes('reliable')) {
+        addMessage(
+`📊 **About AI Analysis Accuracy:**
+
+- This system uses advanced deep learning models trained on thousands of X-ray images  
+- While highly sophisticated, AI analysis should **never replace** professional medical diagnosis  
+- Results are most useful as a **preliminary screening tool**  
+- Accuracy varies depending on image quality and specific conditions
+
+**Always consult qualified healthcare professionals** for definitive diagnosis and treatment decisions.`
+        );
+    } else if (lowerQuery.includes('upload') || lowerQuery.includes('image') || lowerQuery.includes('x-ray')) {
+        addMessage(
+`📤 **Ready to analyze your X-ray!**
+
+To upload an image:
+1. Click the 📎 button below
+2. Select your X-ray image file
+3. I'll automatically analyze it for you
+
+**Supported formats:** JPG, PNG, JPEG, DICOM  
+**Best results:** Clear, front-view chest X-rays`
+        );
+    } else if (lowerQuery.includes('explain') && lowerQuery.includes('simple')) {
+        handleSimpleExplanation();
+    } else if (lowerQuery.includes('next steps') || lowerQuery.includes('what should i do')) {
+        handleNextSteps();
+    } else if (lowerQuery.includes('help') || lowerQuery.includes('what can you do')) {
+        addMessage(
+`🤖 **I'm here to help with chest X-ray analysis!**
+
+**What I can do:**
+- Analyze uploaded X-ray images  
+- Identify potential medical conditions  
+- Provide educational information  
+- Suggest next steps for medical care
+
+**What I cannot do:**
+- Replace professional medical diagnosis  
+- Prescribe treatments or medications  
+- Provide emergency medical advice
+
+How can I assist you today?`
+        );
+    } else {
+        addMessage(
+`I understand you're asking about:  
+> ${query}
+
+For the most accurate help, I specialize in chest X-ray image analysis. You can:  
+- Upload an X-ray image for analysis  
+- Ask about conditions I can detect  
+- Learn about the analysis process
+
+What would you like to know more about?`
+        );
+    }
+}
+
+// Add these new functions after the handleTextQuery function
+function handleSimpleExplanation() {
+    addMessage(
+`💭 **Understanding Your X-ray Results - Simple Explanation:**
+
+**If Normal:**
+- Your chest X-ray shows healthy lung tissue
+- No signs of infection, fluid, or abnormal masses
+- Lungs appear clear and properly inflated
+
+**If Abnormal Finding Detected:**
+- The AI has identified patterns that may indicate a medical condition
+- These patterns could be shadows, spots, or changes in lung texture
+- Different conditions create different visual "signatures" on X-rays
+
+**What This Means:**
+- Think of it like a "first look" or screening
+- Similar to how a smoke detector alerts you to check for fire
+- The AI is pointing out areas that need human expert review
+
+**Remember:**
+- Only doctors can make official diagnoses
+- Many factors affect X-ray interpretation
+- Follow-up tests are often needed for confirmation
+
+**Questions to ask your doctor:**
+- "What specifically do you see in my X-ray?"
+- "What additional tests might be needed?"
+- "How urgent is this finding?"
+- "What are my treatment options?"`
+    );
+}
+
+function handleNextSteps() {
+    addMessage(
+`📋 **Recommended Next Steps Based on Analysis:**
+
+## 🚨 **Immediate Actions (Within 24-48 hours):**
+1. **Contact your primary care physician** or family doctor
+2. **Share this X-ray analysis** with them for professional interpretation
+3. **Mention any symptoms** you're experiencing (cough, fever, chest pain, shortness of breath)
+
+## 📞 **Who to Contact:**
+- **Primary Care Doctor** - For routine follow-up and referrals
+- **Urgent Care** - If you have concerning symptoms but not emergency
+- **Emergency Room** - Only if experiencing severe breathing difficulty, chest pain, or high fever
+
+## 📋 **Information to Prepare:**
+- **Symptom timeline** - When did symptoms start?
+- **Medical history** - Previous lung conditions, surgeries, medications
+- **Recent travel** - Exposure to illness or environmental factors
+- **This X-ray file** - Bring the original image for comparison
+
+## 🏥 **What Your Doctor Might Do:**
+- **Physical examination** - Listen to your lungs, check vital signs
+- **Additional imaging** - CT scan for more detailed view
+- **Laboratory tests** - Blood work, sputum culture if infection suspected
+- **Specialist referral** - Pulmonologist (lung specialist) if needed
+
+## ⚠️ **Warning Signs - Seek Immediate Care:**
+- Severe shortness of breath
+- Chest pain that worsens
+- High fever (>101.5°F/38.6°C)
+- Coughing up blood
+- Confusion or dizziness
+
+## 📱 **Questions to Ask Your Doctor:**
+1. "How urgent is this finding?"
+2. "What additional tests do I need?"
+3. "Should I be concerned about this result?"
+4. "Are there any restrictions on my activities?"
+5. "When should I follow up?"
+
+## 💡 **General Health Tips:**
+- Stay hydrated
+- Get adequate rest
+- Avoid smoking/vaping
+- Monitor your symptoms
+- Follow up as recommended
+
+**Remember:** This AI analysis is a screening tool. Your doctor's evaluation is essential for proper diagnosis and treatment planning.`
+    );
+}
+
+// Update the quick actions in the analysis result section
+// Replace the existing quick-actions div in the analyzeImage function with:
+const quickActionsHtml = `
+    <div class="quick-actions">
+        <div class="quick-action" onclick="addQuickMessage('Can you explain this result in simpler terms?')">💭 Simple explanation</div>
+        <div class="quick-action" onclick="addQuickMessage('What should I do next?')">📋 Detailed next steps</div>
+        <div class="quick-action" onclick="addQuickMessage('What questions should I ask my doctor?')">❓ Doctor questions</div>
+        <div class="quick-action" onclick="addQuickMessage('Upload another X-ray')">📤 New analysis</div>
+    </div>
+`;
+
+// Add this new function to handle doctor questions
+function handleDoctorQuestions() {
+    addMessage(
+`❓ **Important Questions to Ask Your Doctor:**
+
+## 🩺 **About the X-ray Results:**
+- "Can you explain what you see in my chest X-ray?"
+- "How confident are you in this diagnosis?"
+- "Are there any areas of concern I should know about?"
+- "How does this compare to previous X-rays I've had?"
+
+## 🔬 **About Additional Testing:**
+- "Do I need any follow-up imaging or tests?"
+- "Would a CT scan provide more information?"
+- "Should we do blood tests or other lab work?"
+- "How soon should these tests be done?"
+
+## 💊 **About Treatment:**
+- "What are my treatment options?"
+- "Are there medications I should start or avoid?"
+- "What lifestyle changes should I make?"
+- "How long will treatment take?"
+
+## ⏰ **About Timeline and Monitoring:**
+- "How urgent is this condition?"
+- "What symptoms should I watch for?"
+- "When should I schedule a follow-up appointment?"
+- "What would indicate my condition is getting worse?"
+
+## 🏥 **About Specialists:**
+- "Do I need to see a lung specialist (pulmonologist)?"
+- "Should I get a second opinion?"
+- "Are there any specialists you recommend?"
+
+## 🚨 **About Emergency Situations:**
+- "What symptoms would require immediate medical attention?"
+- "Should I go to the ER if certain symptoms develop?"
+- "What number should I call if I have concerns after hours?"
+
+**💡 Tip:** Write down these questions before your appointment and bring this list with you!`
+    );
+}
+        // Initialize chat
+        document.getElementById('messageInput').focus();
+    </script>
+</body>
+</html>
