@@ -8,14 +8,7 @@ This project implements a few-shot learning approach for medical image classific
 
 
 Environment
-
-- **OS:** Windows 10/11 or Ubuntu 20.04+
-- **Processor:** Intel Core i7-1185G7 or better
-- **RAM:** 32 GB
-- **Python:** 3.8+
-- **PyTorch:** 1.9+
-- **CUDA:** (optional, for GPU acceleration)
-- **Other Libraries:** torchvision, numpy, pandas, matplotlib, seaborn, scikit-learn
+The experimentation of this work was conducted in a system with the configuration of 13th Gen Intel® Core™ i5-13500 processor and running a 64-bit Windows operating system on an x64-based architecture. The model was trained using PyTorch, a machine learning framework. The training session comprising 500 episodes for each epoch, twenty epochs were used in the session. Each epoch required approximately 8 to 10 minutes to complete, highlighting the computational demands of episodic training in few-shot learning.
 
 Dataset
 
@@ -57,8 +50,9 @@ Training
 - Loss: CrossEntropyLoss
 - Epochs: 20 (default)
 - Best model checkpoint is saved automatically.
+  
+![Screenshot 2025-06-19 111651](https://github.com/user-attachments/assets/d3157147-4c3d-431d-a8ae-a70a1890287b)
 
-![image](https://github.com/user-attachments/assets/20126b84-cc3e-42a7-a457-0d335b2667dc)
 
 Usage
 
