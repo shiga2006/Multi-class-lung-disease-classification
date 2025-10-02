@@ -8,6 +8,8 @@
 
 *Advanced few-shot learning approach for medical image classification using state-of-the-art Prototypical Networks*
 
+[NIT Trichy, Summer Internship Work](https://drive.google.com/file/d/1e6tpFw6hi4PxetJ8ATY8n1p4mnAubt5g/view?usp=drive_link) 
+
 [📖 Blog Post](https://meta-learning.hashnode.dev/cracking-the-code-of-rare-cases-meta-learning-in-medical-imaging) • [🚀 Quick Start](#-quick-start) • [📊 Results](#-results) • [🔬 Methodology](#-methodology)
 
 </div>
