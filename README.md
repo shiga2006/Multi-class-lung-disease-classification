@@ -4,7 +4,6 @@
   
 [![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org/)
-[![License](https://img.shields.io/badge/License-Academic-blue?style=for-the-badge)](LICENSE)
 [![Accuracy](https://img.shields.io/badge/Accuracy-81.6%25-brightgreen?style=for-the-badge)](README.md)
 
 *Advanced few-shot learning approach for medical image classification using state-of-the-art Prototypical Networks*
